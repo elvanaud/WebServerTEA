@@ -26,10 +26,17 @@ public class WebServer{
 	// requete.     
 	
 	
+	static final boolean SSL_MODE = true;
+	
 	public static void go (int port){ 
 		SSLServerSocketFactory factorySSL = (SSLServerSocketFactory)SSLServerSocketFactory.getDefault();
-		try {          
-			ServerSocket srvk = factorySSL.createServerSocket(port);          
+		try {  
+			ServerSocket srvk;
+			if(SSL_MODE) {
+				srvk = factorySSL.createServerSocket(port); 
+			}else {
+				srvk = new ServerSocket(port);
+			}
 			while (true){                      
 				System.out.println("Serveur en attente "+(nbSessions++));
 				final Socket sck = srvk.accept();
@@ -297,8 +304,11 @@ public class WebServer{
 	
 	public static void main (String args []) throws IOException {
 		//Chargement du keystore pour SSL
-		System.setProperty("javax.net.ssl.keyStore", "keystoreserver");
-		System.setProperty("javax.net.ssl.keyStorePassword", "tpuser");
+		
+		if(SSL_MODE) {
+			System.setProperty("javax.net.ssl.keyStore", "keystoreserver");
+			System.setProperty("javax.net.ssl.keyStorePassword", "tpuser");
+		}
 		
 		go (1234);       
 		System.out.println("ARRET DU SERVEUR");        
