@@ -2,7 +2,11 @@
 import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.io.*; 
-import java.util.*; 
+import java.util.*;
+
+import javax.net.ssl.SSLServerSocketFactory;
+import javax.net.ssl.SSLSocketFactory;
+
 import java.lang.*; 
 public class WebServer{ 
 	// comptage du nombre de sessions    
@@ -22,16 +26,17 @@ public class WebServer{
 	// requete.     
 	
 	
-	public static void go (int port){       
-		ServerSocket srvk;           
+	public static void go (int port){ 
+		SSLServerSocketFactory factorySSL = (SSLServerSocketFactory)SSLServerSocketFactory.getDefault();
 		try {          
-			srvk = new ServerSocket (port);          
+			ServerSocket srvk = factorySSL.createServerSocket(port);          
 			while (true){                      
 				System.out.println("Serveur en attente "+(nbSessions++));
 				final Socket sck = srvk.accept();
 
-				new Thread(new Runnable() {
+				new Thread(new Runnable() { //MULTI THREADING : Un client = un Thread
 
+					//traitement du client
 					@Override
 					public void run() {
 						try {
@@ -53,7 +58,7 @@ public class WebServer{
 			System.out.println("ERREUR IO - "+ e);
 			e.printStackTrace();
 		}                        
-	} // go  
+	} 
 	
 	
 
@@ -290,7 +295,11 @@ public class WebServer{
 		return "";   
 	} // contentType     
 	
-	public static void main (String args []) throws IOException {       
+	public static void main (String args []) throws IOException {
+		//Chargement du keystore pour SSL
+		System.setProperty("javax.net.ssl.keyStore", "keystoreserver");
+		System.setProperty("javax.net.ssl.keyStorePassword", "tpuser");
+		
 		go (1234);       
 		System.out.println("ARRET DU SERVEUR");        
 	}
