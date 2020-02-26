@@ -20,27 +20,43 @@ public class WebServer{
 	// Le serveur est en boucle infinie, et ne s'arrete que si il y a une  
 	// erreur d'Entree/Sortie. Il y a fermeture de socket apres chaque 
 	// requete.     
+	
+	
 	public static void go (int port){       
-		Socket sck = null;       
-		ServerSocket srvk;       
-		DataOutputStream os = null;       
-		BufferedReader br = null;       
+		ServerSocket srvk;           
 		try {          
 			srvk = new ServerSocket (port);          
 			while (true){                      
 				System.out.println("Serveur en attente "+(nbSessions++));
-				sck = srvk.accept ();             
-				os = new DataOutputStream (sck.getOutputStream ());
-				br =  new BufferedReader(new InputStreamReader (sck.getInputStream())); 
-				traiterRequete(br, os);    
-				sck.close();      
+				final Socket sck = srvk.accept();
+
+				new Thread(new Runnable() {
+
+					@Override
+					public void run() {
+						try {
+							DataOutputStream os = new DataOutputStream (sck.getOutputStream ());
+							BufferedReader br =  new BufferedReader(new InputStreamReader (sck.getInputStream()));
+							traiterRequete(br, os);    
+							sck.close();
+						}catch (IOException e) {
+							System.out.println("ERREUR IO - "+ e);
+							e.printStackTrace();
+						}
+					}
+				}).start();
+				
+				     
 			}        
 		}           
 		catch (IOException e) {
-			System.out.println("ERREUR IO"+ e);        
+			System.out.println("ERREUR IO - "+ e);
+			e.printStackTrace();
 		}                        
 	} // go  
 	
+	
+
 	// Methode utile pour demander ou non des print de Trace a l'execution         
 	public static void debug(String s, int n) {       
 		if ((DEBUG & n) != 0)          
@@ -66,6 +82,8 @@ public class WebServer{
 		 *  	- on extrait le nom de fichier demande dans la ligne et onappelle la methode retourFichier. 
         		- Si le suffixe du nom de fichier est .htm ou .html, on fait la meme chose que ci-dessus pour GET         
         		- Si le suffixe est autre, on appelle la methode retourCGIPOST       */   
+
+		
 		String line = lireLigne("Premiere ligne de requete", br);
 		if(line == null) {
 			debug("Couldn't read line (null)",2);
