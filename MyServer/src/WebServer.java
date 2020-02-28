@@ -26,7 +26,7 @@ public class WebServer{
 	// requete.     
 	
 	
-	static final boolean SSL_MODE = true;
+	static boolean SSL_MODE = false;
 	
 	public static void go (int port){ 
 		SSLServerSocketFactory factorySSL = (SSLServerSocketFactory)SSLServerSocketFactory.getDefault();
@@ -304,6 +304,10 @@ public class WebServer{
 	
 	public static void main (String args []) throws IOException {
 		//Chargement du keystore pour SSL
+		if(args.length >= 1 && args[0].equals("https"))
+		{
+			SSL_MODE = true;
+		}
 		
 		if(SSL_MODE) {
 			System.setProperty("javax.net.ssl.keyStore", "keystoreserver");
