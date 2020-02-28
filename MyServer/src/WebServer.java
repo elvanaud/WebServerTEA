@@ -29,6 +29,7 @@ public class WebServer{
 	static boolean SSL_MODE = false;
 	
 	public static void go (int port){ 
+		//création des sockets
 		SSLServerSocketFactory factorySSL = (SSLServerSocketFactory)SSLServerSocketFactory.getDefault();
 		try {  
 			ServerSocket srvk;
@@ -37,6 +38,7 @@ public class WebServer{
 			}else {
 				srvk = new ServerSocket(port);
 			}
+			//serveur en attente
 			while (true){                      
 				System.out.println("Serveur en attente "+(nbSessions++));
 				final Socket sck = srvk.accept();
@@ -101,9 +103,10 @@ public class WebServer{
 			debug("Couldn't read line (null)",2);
 			return;
 		}
-		if(line.substring(0, 3).contentEquals("GET"))
+		if(line.substring(0, 3).contentEquals("GET")) //cas de méthode GET
 		{
 			debug("Exec GET: " + line, 2);
+			//Récupère le nom de fichier
 			String[] split = line.split(" ");
 			String filename = split[1];
 			if(filename.startsWith("/"))
@@ -113,11 +116,12 @@ public class WebServer{
 			{
 				filename = "index.html";
 			}
-			retourFichier(filename, dos);
+			retourFichier(filename, dos);//renvoie le fichier demandé
 		}
-		else if(line.substring(0, 4).contentEquals("POST"))
+		else if(line.substring(0, 4).contentEquals("POST")) //Cas de méthode POST
 		{
 			debug("Exec POST",2);
+			//Récupère le nom de fichier
 			String[] split = line.split(" ");
 			String filename = split[1];
 			if(filename.startsWith("/"))
@@ -129,12 +133,12 @@ public class WebServer{
 			debug("FileName: "+filename,2);
 			if(filename.endsWith(".html") || filename.endsWith(".htm"))
 			{
-				retourFichier(filename, dos);
+				retourFichier(filename, dos); //Méthode Get normale
 			}
 			else
 			{
 				debug("CGI post",2);
-				retourCGIPOST(filename, br, dos);
+				retourCGIPOST(filename, br, dos); //Retour pseudo cgi
 			}
 			
 		}
@@ -146,7 +150,7 @@ public class WebServer{
 		 * - Si le fichier n'existe pas on prepare les infos qui conviennent         
 		 * et on les envoit          */  
 		debug("retourFichier entered",2);
-		File file = null;
+		File file = null; //Ouverture du fichier
 		try {
 			debug("Try entered",2);
 			file = new File(f);
@@ -168,6 +172,7 @@ public class WebServer{
 			debug("File found",2);
 			statusLine = "HTTP/1.1 200 OK";
 		}
+		//gestion du header
 		contentTypeLine = "Content-Type: "+contentType(f);
 		contentLengthLine = "Content-Length: " + file.length();
 		FileInputStream fis = new FileInputStream(file);
@@ -191,7 +196,7 @@ public class WebServer{
 		 *   lit ligne ‡ ligne jusqu'a avoir une valeur de chaine null.  
 		 *     Toutes ces lignes sont accumulees dans une chaine qui   
 		 *      est retournee en fin d'execution.     */ 
-		if(f.split(" ", 0)[0].endsWith(".py"))
+		if(f.split(" ", 0)[0].endsWith(".py")) //Je me suis amusé à gérer le cgi en python
 		{
 			Process p = Runtime.getRuntime().exec("python "+f);
 			BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -205,15 +210,17 @@ public class WebServer{
 			}
 			//out.close();
 		}
-		else
+		else //Les autres ectensions sont gérées ici, uniquement en code java 
 		{
 			debug("In executer (POST)",2);
 			debug("Content:"+f,2);
 			String argsLine = f.split(" ")[1];
 			String [] args = argsLine.split("&");
+
 			String name ="default";
 			String age="45";
-			
+
+			//Initialisation des paramètres
 			for(String arg : args)
 			{
 				String[] pair = arg.split("=");
@@ -226,6 +233,8 @@ public class WebServer{
 					age=pair[1];
 				}
 			}
+
+			//Génération de la page
 			String begin="<DOCTYPE html>\n<html>\n<body>\n<p>Bienvenue ";
 			String body = begin+name+" vous avez "+age+" ans";
 			return body+"</p>\n</body>\n</html>";
@@ -303,12 +312,12 @@ public class WebServer{
 	} // contentType     
 	
 	public static void main (String args []) throws IOException {
-		//Chargement du keystore pour SSL
 		if(args.length >= 1 && args[0].equals("https"))
 		{
 			SSL_MODE = true;
 		}
-		
+
+		//Chargement du keystore pour SSL
 		if(SSL_MODE) {
 			System.setProperty("javax.net.ssl.keyStore", "keystoreserver");
 			System.setProperty("javax.net.ssl.keyStorePassword", "tpuser");
